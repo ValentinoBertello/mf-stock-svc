@@ -1,0 +1,132 @@
+        CREATE DATABASE IF NOT EXISTS stock_service;
+        USE stock_service;
+
+        -- ============================================
+        -- 0. Tabla de categorías de supplies
+        -- ============================================
+        CREATE TABLE supply_categories (
+            id BIGINT PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(50) NOT NULL UNIQUE
+        );
+
+        -- ============================================
+        -- 1. Tabla de supplies
+        -- ============================================
+          CREATE TABLE supplies (
+            id BIGINT  PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(100) NOT NULL,
+            unit  ENUM('KG', 'LITRO', 'UNIDAD') NOT NULL,
+            min_quantity DECIMAL(10,2) NOT NULL,
+            active BOOLEAN NOT NULL,
+            merendero_id BIGINT NULL,
+            category_id BIGINT NOT NULL,
+            last_alert_date DATETIME NOT NULL,
+            FOREIGN KEY (category_id) REFERENCES supply_categories(id)
+        );
+
+
+
+        -- ============================================
+        -- 3. Table: supply_entries
+        -- ============================================
+        CREATE TABLE supply_entries (
+            id BIGINT  PRIMARY KEY AUTO_INCREMENT,
+            merendero_id BIGINT NOT NULL,
+            supply_id BIGINT NOT NULL,           -- References supplies.id
+            quantity DECIMAL(10,2) NOT NULL,
+            entry_date DATETIME NOT NULL,
+            entry_type ENUM('DONATION','PURCHASE') NOT NULL,
+            FOREIGN KEY (supply_id) REFERENCES supplies(id)
+        );
+
+     -- ============================================
+        --  Table: types_expense
+        -- ============================================
+        CREATE TABLE types_expense (
+          id BIGINT  PRIMARY KEY AUTO_INCREMENT,
+          description  VARCHAR(100)
+        );
+
+    -- ============================================
+        -- 2. Table: expenses
+        -- ============================================
+        CREATE TABLE expenses (
+          id BIGINT  PRIMARY KEY AUTO_INCREMENT,
+          merendero_id BIGINT NOT NULL,
+          amount DECIMAL(10,2) NOT NULL,
+          entry_id BIGINT NULL,
+          type_expense_id BIGINT NOT NULL,
+          supply_id BIGINT NULL,
+          expense_date DATETIME NOT NULL,
+           FOREIGN KEY (type_expense_id) REFERENCES types_expense(id),
+          FOREIGN KEY (entry_id) REFERENCES supply_entries(id),
+          FOREIGN KEY (supply_id) REFERENCES supplies(id)
+        );
+
+        -- ============================================
+        -- 4. Table: supply_outputs
+        -- ============================================
+        CREATE TABLE supply_outputs (
+            id BIGINT  PRIMARY KEY AUTO_INCREMENT,
+            merendero_id BIGINT NOT NULL,       -- References merenderos.id
+            supply_id BIGINT NOT NULL,            -- References supplies.id
+            quantity DECIMAL(10,2) NOT NULL,
+            output_date DATETIME NOT NULL,
+            FOREIGN KEY (supply_id) REFERENCES supplies(id)
+            );
+
+
+            -- ============================================
+        -- 5. Table: daily_attendances
+        -- ============================================
+        CREATE TABLE daily_attendances (
+            id BIGINT  PRIMARY KEY AUTO_INCREMENT,
+            merendero_id BIGINT NOT NULL,      -- References merenderos.id
+            attendance_date DATETIME NOT NULL,
+            people_served INT NOT NULL
+        );
+
+            -- ============================================
+        -- 6. Table: supply_lotes
+        -- ============================================
+        CREATE TABLE supply_lotes (
+            id BIGINT PRIMARY KEY AUTO_INCREMENT,
+            supply_id BIGINT NOT NULL,
+            merendero_id BIGINT NOT NULL,
+            entrada_id BIGINT NOT NULL,
+            initial_quantity DECIMAL(10,2) NOT NULL,
+            current_quantity DECIMAL(10,2) NOT NULL,
+            expiration_date DATE NOT NULL,
+            notified BOOLEAN DEFAULT FALSE,
+            FOREIGN KEY (supply_id) REFERENCES supplies(id),
+            FOREIGN KEY (entrada_id) REFERENCES supply_entries(id)
+        );
+
+        -- ============================================
+        -- 7. Tabla: merendero_supplies (NUEVA)
+        -- ============================================
+        CREATE TABLE merendero_supplies (
+            merendero_id BIGINT NOT NULL,
+            supply_id BIGINT NOT NULL,
+            PRIMARY KEY (merendero_id, supply_id),
+            FOREIGN KEY (supply_id) REFERENCES supplies(id)
+        );
+
+
+    -- ============================================
+    -- Inserts types_expense
+    -- ============================================
+    INSERT INTO types_expense (description) VALUES
+      ('Compra de Insumos'),
+      ('Luz y Gas'),
+      ('Mantenimiento'),
+      ('Productos de Limpieza'),
+      ('Otro');
+
+        -- ============================================
+        -- Inserts Iniciales para supply_categories
+        -- ============================================
+        INSERT INTO supply_categories (name) VALUES
+        ('Alimentos'),
+        ('Bebidas'),
+        ('Otros');
